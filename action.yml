@@ -17,6 +17,13 @@ inputs:
     description: 'Jenkins job timeout period. Default 30 seconds'
     required: false
     default: '30'
+  async:
+    description: 'Set to true if you want to just trigger the job without waiting for it to finish'
+    required: false
+    default: false
+outputs:
+  jenkins_job_url:
+    description: 'URL to the job details'
 runs:
   using: 'docker'
   image: 'Dockerfile'
