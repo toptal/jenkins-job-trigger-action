@@ -27,29 +27,4 @@ jobs:
           async: false # Default to false (optional)
 ```
 
-It's also possible trigger a Jenkins job and don't wait for it to finish with the `async` option
-
-```
-name: Your GHA
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  your_job_name:
-    name: Trigger Jenkins Job asynchronously
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger your-awesome-job-name job
-        id: trigger-jenkins-job
-        uses: toptal/jenkins-job-trigger-action@master
-        with:
-          jenkins_url: "https://your.jenkins.url/"
-          jenkins_user: ${{ secrets.JENKINS_USER }}
-          jenkins_token: ${{ secrets.JENKINS_TOKEN }}
-          job_name: "the-name-of-your-jenkins-job"
-          async: true
-          
-      - name: Debug
-        run: echo "A job has been scheduled, see progress at ${{steps.trigger-jenkins-job.outputs.jenkins_job_url}}"
-```
+It's also possible to trigger a Jenkins job without waiting for it to finish by setting async option as true
