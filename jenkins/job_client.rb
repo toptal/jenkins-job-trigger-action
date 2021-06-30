@@ -3,7 +3,7 @@ require 'json'
 module Jenkins
   class JobClient
 
-    attr_reader :jenkins_url, :jenkins_user, :jenkins_token, :job_name, :job_params, :job_timeout
+    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :job_name, :job_params, :job_timeout
 
     DEFAULT_TIMEOUT = 30
     INTERVAL_SECONDS = 10
@@ -13,6 +13,7 @@ module Jenkins
       @jenkins_user = args['INPUT_JENKINS_USER']
       @jenkins_token = args['INPUT_JENKINS_TOKEN']
       @job_name = args['INPUT_JOB_NAME']
+      @async_mode = args['INPUT_ASYNC']
       @job_params = JSON.parse(args['INPUT_JOB_PARAMS'])
       @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
     end
@@ -21,7 +22,11 @@ module Jenkins
       crumb = get_crumb
       queue_item_location = queue_job(crumb, job_name, job_params)
       job_run_url = get_job_run_url(queue_item_location, job_timeout)
+      puts "::set-output name=jenkins_job_url::#{job_run_url}"
       puts "Job run URL: #{job_run_url}"
+
+      exit(0) if @async_mode
+
       job_progress(job_run_url, job_timeout)
       exit(0)
     end
