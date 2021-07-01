@@ -25,8 +25,12 @@ module Jenkins
       puts "::set-output name=jenkins_job_url::#{job_run_url}"
       puts "Job run URL: #{job_run_url}"
 
-      exit(0) if @async_mode
+      if @async_mode
+        puts "Stopping at the triggering step since the async option is enabled"
+        exit(0)
+      end
 
+      puts "Observing the job progress"
       job_progress(job_run_url, job_timeout)
       exit(0)
     end
