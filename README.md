@@ -24,7 +24,4 @@ jobs:
           job_name: "the-name-of-your-jenkins-job"
           job_params: '{"param_1":"value_1", "param_2":"value_2"}'
           job_timeout: "3600" # Default 30 sec. (optional)
-          async: false # Default to false (optional)
 ```
-
-It's also possible to trigger a Jenkins job without waiting for it to finish by setting async option as true
