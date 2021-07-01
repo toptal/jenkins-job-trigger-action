@@ -27,6 +27,7 @@ module Jenkins
 
       puts @async_mode
       puts @async_mode.inspect
+      puts @async_mode.class
       exit(0) if @async_mode == true
 
       job_progress(job_run_url, job_timeout)
