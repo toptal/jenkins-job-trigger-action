@@ -25,7 +25,7 @@ module Jenkins
       puts "::set-output name=jenkins_job_url::#{job_run_url}"
       puts "Job run URL: #{job_run_url}"
 
-      exit(0) if @async_mode
+      exit(0) if @async_mode == true
 
       job_progress(job_run_url, job_timeout)
       exit(0)
