@@ -18,7 +18,7 @@ jobs:
       - name: Trigger your-awesome-job-name job
         uses: toptal/jenkins-job-trigger-action@master
         with:
-          jenkins_url: "https://your.jenkins.url/"
+          jenkins_url: "https://jenkins-deployment.toptal.net/"
           jenkins_user: ${{ secrets.JENKINS_USER }}
           jenkins_token: ${{ secrets.JENKINS_TOKEN }}
           job_name: "the-name-of-your-jenkins-job"
