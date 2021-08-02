@@ -35,8 +35,7 @@ module Jenkins
     end
 
     def perform_request(url, method = :get, **args)
-      RestClient.proxy = "https://#{jenkins_proxy}"
-      response = RestClient::Request.execute method: method, url: url, args: args
+      response = RestClient::Request.execute method: method, url: url, proxy: jenkins_proxy, args: args
       response_code = response.code
       raise "Error on #{method} to #{url} [#{response_code}]" unless (200..299).include? response_code
       response
