@@ -3,15 +3,14 @@ require 'json'
 module Jenkins
   class JobClient
 
-    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :job_name, :job_params, :job_timeout
+    attr_reader :async_mode, :jenkins_url, :jenkins_proxy, :job_name, :job_params, :job_timeout
 
     DEFAULT_TIMEOUT = 30
     INTERVAL_SECONDS = 10
 
     def initialize(args)
       @jenkins_url = args['INPUT_JENKINS_URL']
-      @jenkins_user = args['INPUT_JENKINS_USER']
-      @jenkins_token = args['INPUT_JENKINS_TOKEN']
+      @jenkins_proxy = args['INPUT_JENKINS_PROXY']
       @job_name = args['INPUT_JOB_NAME']
       @async_mode = args['INPUT_ASYNC'].to_s == 'true'
       @job_params = JSON.parse(args['INPUT_JOB_PARAMS'])
@@ -36,7 +35,7 @@ module Jenkins
     end
 
     def perform_request(url, method = :get, **args)
-      response = RestClient::Request.execute method: method, url: url, user: jenkins_user, password: jenkins_token, args: args
+      response = RestClient::Request.execute method: method, url: url, proxy: jenkins_proxy, args: args
       response_code = response.code
       raise "Error on #{method} to #{url} [#{response_code}]" unless (200..299).include? response_code
       response
@@ -53,7 +52,7 @@ module Jenkins
       query_string = ''
       job_params&.each_pair { |k, v| query_string +="#{k}=#{v}&" }
       job_queue_url = "#{jenkins_url}job/#{job_name}/buildWithParameters?#{query_string}".chop
-      queue_response = perform_request(job_queue_url, :post, params: { 'token': jenkins_token }, headers: {'Jenkins-Crumb': crumb})
+      queue_response = perform_request(job_queue_url, :post, headers: {'Jenkins-Crumb': crumb})
       queue_item_location = queue_response.headers[:location]
       queue_item_location
     end

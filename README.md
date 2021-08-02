@@ -19,8 +19,7 @@ jobs:
         uses: toptal/jenkins-job-trigger-action@master
         with:
           jenkins_url: "https://your.jenkins.url/"
-          jenkins_user: ${{ secrets.JENKINS_USER }}
-          jenkins_token: ${{ secrets.JENKINS_TOKEN }}
+          jenkins_proxy: ${{ secrets.JENKINS_PROXY }}
           job_name: "the-name-of-your-jenkins-job"
           job_params: '{"param_1":"value_1", "param_2":"value_2"}'
           job_timeout: "3600" # Default 30 sec. (optional)
@@ -30,8 +29,7 @@ jobs:
 ### Inputs
 
 * `jenkins_url`: **required** Jenkins instance URL
-* `jenkins_user`: **required** User name used for authentication
-* `jenkins_token`: **required** User token used for authentication
+* `jenkins_proxy`: **required** Proxy URL, includes username and password
 * `job_name`: **required** for jobs stored in a folder use `{folder-name}/job/{job-name}`
 * `job_params`: **required** Valid JSON with key-value params passed to the job
 * `job_timeout`: Number of seconds to wait for the action to finish (Default 30)
