@@ -5,14 +5,23 @@ inputs:
   jenkins_url:
     required: true
     description: 'Jenkins domain URL'
-  jenkins_proxy:
+  jenkins_user:
     required: true
-    description: 'Jenkins proxy, which includes username and password'
+    description: 'Jenkins username'
+  jenkins_api_token:
+    required: true
+    description: 'Jenkins API token that belongs to jenkins_user'
+  proxy:
+    required: true
+    description: 'Proxy url, which includes username and password'
   job_name:
     required: true
     description: 'Jenkins job to triggered and follow up'
+  job_token:
+    required: false
+    description: 'Job-specific token/password that is needed to trigger it. Optional parameter'
   job_params:
-    description: 'Jenkins build job parameters'
+    description: 'Jenkins build job parameters, encoded in JSON'
     required: false
   job_timeout:
     description: 'Jenkins job timeout period. Default 30 seconds'
