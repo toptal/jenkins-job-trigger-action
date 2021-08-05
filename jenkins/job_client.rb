@@ -13,17 +13,11 @@ module Jenkins
       @jenkins_url = args['INPUT_JENKINS_URL']
       @jenkins_user = args['INPUT_JENKINS_USER']
       @jenkins_token = args['INPUT_JENKINS_TOKEN']
-      @proxy = normalize_proxy(args['INPUT_PROXY'])
+      @proxy = args['INPUT_PROXY']
       @job_name = args['INPUT_JOB_NAME']
       @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
       @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
       @async_mode = args['INPUT_ASYNC'].to_s == 'true'
-    end
-
-    def normalize_proxy(proxy)
-      return proxy unless proxy
-      proxy = "http://#{proxy}" unless proxy.start_with?('http://')
-      proxy
     end
 
     def call
