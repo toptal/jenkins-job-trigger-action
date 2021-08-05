@@ -11,14 +11,14 @@ module Jenkins
 
     def initialize(args)
       @jenkins_url = args['INPUT_JENKINS_URL']
-      @job_name = args['INPUT_JOB_NAME']
-      @async_mode = args['INPUT_ASYNC'].to_s == 'true'
-      @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
-      @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
       @jenkins_user = args['INPUT_JENKINS_USER']
       @jenkins_api_token = args['INPUT_JENKINS_API_TOKEN']
-      @job_token = args['INPUT_JOB_TOKEN']
       @proxy = normalize_proxy(args['INPUT_PROXY'])
+      @job_name = args['INPUT_JOB_NAME']
+      @job_token = args['INPUT_JOB_TOKEN']
+      @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
+      @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
+      @async_mode = args['INPUT_ASYNC'].to_s == 'true'
     end
 
     def normalize_proxy(proxy)

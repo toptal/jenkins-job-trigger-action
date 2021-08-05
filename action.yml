@@ -19,7 +19,7 @@ inputs:
     description: 'Jenkins job to triggered and follow up'
   job_token:
     required: false
-    description: 'Job-specific token/password that is needed to trigger it. Optional parameter'
+    description: 'Job-specific token/password that is needed to trigger it'
   job_params:
     description: 'Jenkins build job parameters, encoded in JSON'
     required: false
