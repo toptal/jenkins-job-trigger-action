@@ -20,7 +20,7 @@ jobs:
         with:
           jenkins_url: "https://your.jenkins.url/"
           jenkins_user: ${{ secrets.JENKINS_USER }}
-          jenkins_token: ${{ secrets.JENKINS_API_TOKEN }}
+          jenkins_token: ${{ secrets.JENKINS_TOKEN }}
           proxy: ${{ secrets.JENKINS_PROXY }}
           job_name: "the-name-of-your-jenkins-job"
           job_params: |
