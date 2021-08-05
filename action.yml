@@ -8,7 +8,7 @@ inputs:
   jenkins_user:
     required: true
     description: 'Jenkins username'
-  jenkins_api_token:
+  jenkins_token:
     required: true
     description: 'Jenkins API token that belongs to jenkins_user'
   proxy:
@@ -17,9 +17,6 @@ inputs:
   job_name:
     required: true
     description: 'Jenkins job to triggered and follow up'
-  job_token:
-    required: false
-    description: 'Job-specific token/password that is needed to trigger it'
   job_params:
     description: 'Jenkins build job parameters, encoded in JSON'
     required: false

@@ -4,7 +4,7 @@ require 'json'
 module Jenkins
   class JobClient
 
-    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_api_token, :job_token, :proxy, :job_name, :job_params, :job_timeout
+    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :proxy, :job_name, :job_params, :job_timeout
 
     DEFAULT_TIMEOUT = 30
     INTERVAL_SECONDS = 10
@@ -12,10 +12,9 @@ module Jenkins
     def initialize(args)
       @jenkins_url = args['INPUT_JENKINS_URL']
       @jenkins_user = args['INPUT_JENKINS_USER']
-      @jenkins_api_token = args['INPUT_JENKINS_API_TOKEN']
+      @jenkins_token = args['INPUT_JENKINS_TOKEN']
       @proxy = normalize_proxy(args['INPUT_PROXY'])
       @job_name = args['INPUT_JOB_NAME']
-      @job_token = args['INPUT_JOB_TOKEN']
       @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
       @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
       @async_mode = args['INPUT_ASYNC'].to_s == 'true'
@@ -44,7 +43,7 @@ module Jenkins
     end
 
     def perform_request(url, method = :get, **args)
-      response = RestClient::Request.execute method: method, url: url, user: jenkins_user, password: jenkins_api_token, proxy: proxy, args: args
+      response = RestClient::Request.execute method: method, url: url, user: jenkins_user, password: jenkins_token, proxy: proxy, args: args
       response_code = response.code
       raise "Error on #{method} to #{url} [#{response_code}]" unless (200..299).include? response_code
       response
@@ -54,7 +53,7 @@ module Jenkins
       trigger_method = job_params.empty? ? 'build' : 'buildWithParameters'
       job_params = job_params.map { |key, val| [key.to_sym, val] }.to_h
       job_queue_url = "#{jenkins_url}/job/#{job_name}/#{trigger_method}"
-      queue_response = perform_request(job_queue_url, :post, params: { token: job_token }, payload: job_params)
+      queue_response = perform_request(job_queue_url, :post, payload: job_params)
       queue_response.headers[:location]
     end
 
