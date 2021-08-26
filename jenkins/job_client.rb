@@ -9,7 +9,7 @@ module Jenkins
     INTERVAL_SECONDS = 10
 
     def initialize(args)
-      @jenkins_url = args['INPUT_JENKINS_URL']
+      @jenkins_url = args['INPUT_JENKINS_URL'].chomp('/')
       @jenkins_user = args['INPUT_JENKINS_USER']
       @jenkins_token = args['INPUT_JENKINS_TOKEN']
       @job_name = args['INPUT_JOB_NAME']
@@ -52,7 +52,7 @@ module Jenkins
     def queue_job(crumb, job_name, job_params)
       query_string = ''
       job_params&.each_pair { |k, v| query_string +="#{k}=#{v}&" }
-      job_queue_url = "#{jenkins_url}job/#{job_name}/buildWithParameters?#{query_string}".chop
+      job_queue_url = "#{jenkins_url}/job/#{job_name}/buildWithParameters?#{query_string}".chop
       queue_response = perform_request(job_queue_url, :post, params: { 'token': jenkins_token }, headers: {'Jenkins-Crumb': crumb})
       queue_item_location = queue_response.headers[:location]
       queue_item_location
