@@ -1,9 +1,10 @@
 require 'rest-client'
 require 'json'
+
 module Jenkins
   class JobClient
 
-    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :job_name, :job_params, :job_timeout
+    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :proxy, :job_name, :job_params, :job_timeout
 
     DEFAULT_TIMEOUT = 30
     INTERVAL_SECONDS = 10
@@ -12,15 +13,15 @@ module Jenkins
       @jenkins_url = args['INPUT_JENKINS_URL'].chomp('/')
       @jenkins_user = args['INPUT_JENKINS_USER']
       @jenkins_token = args['INPUT_JENKINS_TOKEN']
+      @proxy = args['INPUT_PROXY']
       @job_name = args['INPUT_JOB_NAME']
-      @async_mode = args['INPUT_ASYNC'].to_s == 'true'
-      @job_params = JSON.parse(args['INPUT_JOB_PARAMS'])
+      @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
       @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
+      @async_mode = args['INPUT_ASYNC'].to_s == 'true'
     end
 
     def call
-      crumb = get_crumb
-      queue_item_location = queue_job(crumb, job_name, job_params)
+      queue_item_location = queue_job(job_name, job_params)
       job_run_url = get_job_run_url(queue_item_location, job_timeout)
       puts "::set-output name=jenkins_job_url::#{job_run_url}"
       puts "Job run URL: #{job_run_url}"
@@ -36,28 +37,20 @@ module Jenkins
     end
 
     def perform_request(url, method = :get, **args)
-      response = RestClient::Request.execute method: method, url: url, user: jenkins_user, password: jenkins_token, args: args
+      payload = args.delete(:payload)
+      response = RestClient::Request.execute method: method, url: url, payload: payload, user: jenkins_user, password: jenkins_token, proxy: proxy, args: args
       response_code = response.code
       raise "Error on #{method} to #{url} [#{response_code}]" unless (200..299).include? response_code
       response
     end
 
-
-    def get_crumb
-      response = perform_request("#{jenkins_url}/crumbIssuer/api/json", headers: {'content-type': 'application/json'})
-      JSON.parse(response)['crumb']
+    def queue_job(job_name, job_params)
+      trigger_method = job_params.empty? ? 'build' : 'buildWithParameters'
+      job_params = job_params.map { |key, val| [key.to_sym, val] }.to_h
+      job_queue_url = "#{jenkins_url}/job/#{job_name}/#{trigger_method}"
+      queue_response = perform_request(job_queue_url, :post, payload: job_params)
+      queue_response.headers[:location]
     end
-
-
-    def queue_job(crumb, job_name, job_params)
-      query_string = ''
-      job_params&.each_pair { |k, v| query_string +="#{k}=#{v}&" }
-      job_queue_url = "#{jenkins_url}/job/#{job_name}/buildWithParameters?#{query_string}".chop
-      queue_response = perform_request(job_queue_url, :post, params: { 'token': jenkins_token }, headers: {'Jenkins-Crumb': crumb})
-      queue_item_location = queue_response.headers[:location]
-      queue_item_location
-    end
-
 
     def get_job_run_url(queue_item_location, job_timeout = DEFAULT_TIMEOUT)
       job_run_url = nil
