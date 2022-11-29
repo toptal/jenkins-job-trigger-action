@@ -23,7 +23,7 @@ module Jenkins
     def call
       queue_item_location = queue_job(job_name, job_params)
       job_run_url = get_job_run_url(queue_item_location, job_timeout)
-      puts "::set-output name=jenkins_job_url::#{job_run_url}"
+      puts "echo 'jenkins_job_url=#{job_run_url}' >> $GITHUB_OUTPUT"
       puts "Job run URL: #{job_run_url}"
 
       if @async_mode
