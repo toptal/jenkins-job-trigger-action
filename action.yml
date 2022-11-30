@@ -11,9 +11,6 @@ inputs:
   jenkins_token:
     required: true
     description: 'Jenkins API token that belongs to jenkins_user'
-  proxy:
-    required: true
-    description: 'Proxy url, which includes username and password'
   job_name:
     required: true
     description: 'Jenkins job to triggered and follow up'
@@ -24,6 +21,9 @@ inputs:
     description: 'Jenkins job timeout period. Default 30 seconds'
     required: false
     default: '30'
+  proxy:
+    required: false
+    description: 'Proxy url, which includes username and password'
   async:
     description: 'Set to true if you want to just trigger the job without waiting for it to finish'
     required: false
