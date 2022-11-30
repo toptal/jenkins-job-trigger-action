@@ -37,10 +37,10 @@ jobs:
 * `jenkins_url`: **required** Jenkins instance URL
 * `jenkins_user`: **required** User name used for authentication
 * `jenkins_token`: **required** Jenkins API token that belongs to jenkins_user
-* `proxy`: **required** Proxy URL, includes username and password
 * `job_name`: **required** for jobs stored in a folder use `{folder-name}/job/{job-name}`
 * `job_params`: Valid JSON with key-value params passed to the job
 * `job_timeout`: Number of seconds to wait for the action to finish (Default 30)
+* `proxy`: Proxy URL, includes username and password
 * `async`: Set to true if you want to just trigger the job and dont wait for it to complete (Default false)
 
 ### Outputs
