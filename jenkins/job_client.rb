@@ -4,7 +4,7 @@ require 'json'
 module Jenkins
   class JobClient
 
-    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :proxy, :job_name, :job_params, :job_timeout
+    attr_reader :jenkins_url, :jenkins_user, :jenkins_token, :job_name, :iap_token, :job_params, :job_timeout, :async_mode
 
     DEFAULT_TIMEOUT = 30
     INTERVAL_SECONDS = 10
@@ -13,8 +13,8 @@ module Jenkins
       @jenkins_url = args['INPUT_JENKINS_URL'].chomp('/')
       @jenkins_user = args['INPUT_JENKINS_USER']
       @jenkins_token = args['INPUT_JENKINS_TOKEN']
-      @proxy = args['INPUT_PROXY']
       @job_name = args['INPUT_JOB_NAME']
+      @iap_token = args['INPUT_IAP_TOKEN']
       @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
       @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
       @async_mode = args['INPUT_ASYNC'].to_s == 'true'
@@ -38,7 +38,10 @@ module Jenkins
 
     def perform_request(url, method = :get, **args)
       payload = args.delete(:payload)
-      response = RestClient::Request.execute method: method, url: url, payload: payload, user: jenkins_user, password: jenkins_token, proxy: proxy, args: args
+      url_prefix = 'https://'
+      jenkins_url = url.delete_prefix(url_prefix) if url.include?(url_prefix)
+      url = "#{url_prefix}#{jenkins_user}:#{jenkins_token}@#{jenkins_url}"
+      response = RestClient::Request.execute method: method, url: url, :headers => {"Proxy-Authorization" => "Bearer #{iap_token}", :params => payload}
       response_code = response.code
       raise "Error on #{method} to #{url} [#{response_code}]" unless (200..299).include? response_code
       response

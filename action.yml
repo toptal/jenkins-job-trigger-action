@@ -14,6 +14,9 @@ inputs:
   job_name:
     required: true
     description: 'Jenkins job to triggered and follow up'
+  iap_token:
+    description: 'Token to authenticate to Identity Aware Proxy (IAP)'
+    required: true
   job_params:
     description: 'Jenkins build job parameters, encoded in JSON'
     required: false
