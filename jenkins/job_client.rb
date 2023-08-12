@@ -4,20 +4,20 @@ require 'json'
 module Jenkins
   class JobClient
 
-    attr_reader :jenkins_url, :jenkins_user, :jenkins_token, :job_name, :iap_token, :job_params, :job_timeout, :async_mode
+    attr_reader :jenkins_url, :jenkins_user, :jenkins_token, :job_name, :jenkins_client_id, :job_sa_credentials, :gcr_account_key, :iap_token, :job_params, :job_timeout, :async_mode
 
     DEFAULT_TIMEOUT = 30
     INTERVAL_SECONDS = 10
 
     def initialize(args)
-      @jenkins_url = args['INPUT_JENKINS_URL'].chomp('/')
-      @jenkins_user = args['INPUT_JENKINS_USER']
-      @jenkins_token = args['INPUT_JENKINS_TOKEN']
-      @job_name = args['INPUT_JOB_NAME']
-      @iap_token = args['INPUT_IAP_TOKEN']
-      @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
-      @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
-      @async_mode = args['INPUT_ASYNC'].to_s == 'true'
+      @jenkins_url = ENV['jenkins_url'].chomp('/')
+      @jenkins_user = ENV['jenkins_user']
+      @jenkins_token = ENV['jenkins_token']
+      @job_name = ENV['job_name']
+      @iap_token = ENV['iap_token']
+      @job_params = JSON.parse(ENV['job_params'] || '{"dummy":"1234"}')
+      @job_timeout = ENV['job_timeout'] || DEFAULT_TIMEOUT
+      @async_mode = ENV['async'].to_s == 'true'
     end
 
     def call
@@ -28,7 +28,6 @@ module Jenkins
         f << "jenkins_job_url=#{job_run_url}"
       end
       puts "Job run URL: #{job_run_url}"
-      
 
       if @async_mode
         puts "Stopping at the triggering step since the async option is enabled"
@@ -76,16 +75,16 @@ module Jenkins
           # NOOP
         end
         if job_run_url.nil?
-            timeout_countdown -= sleep(INTERVAL_SECONDS)
+          timeout_countdown -= sleep(INTERVAL_SECONDS)
         end
       end
 
       if job_run_url
-          return job_run_url
+        return job_run_url
       elsif timeout_countdown.zero?
-          fail!("JOB TRIGGER TIMED OUT (After #{job_timeout} seconds)")
+        fail!("JOB TRIGGER TIMED OUT (After #{job_timeout} seconds)")
       else
-          fail!("JOB TRIGGER FAILED.")
+        fail!("JOB TRIGGER FAILED.")
       end
       job_run_url
     end
@@ -99,29 +98,29 @@ module Jenkins
       timeout_countdown = job_timeout
       while build_result.nil? and timeout_countdown > 0
         begin
-            build_response = perform_request(job_progress_url, :get)
-            result = JSON.parse(build_response)['result']
-            build_result = result || build_result
+          build_response = perform_request(job_progress_url, :get)
+          result = JSON.parse(build_response)['result']
+          build_result = result || build_result
         rescue
-            # "NOOP"
+          # "NOOP"
         end
         if build_result.nil?
-            timeout_countdown = timeout_countdown - sleep(INTERVAL_SECONDS)
+          timeout_countdown = timeout_countdown - sleep(INTERVAL_SECONDS)
         elsif build_result == 'ABORTED'
           fail!('JOB ABORTED')
         end
       end
       if build_result == 'SUCCESS'
-          puts 'DDL validation with SUCCESS status!'
+        puts 'DDL validation with SUCCESS status!'
       elsif timeout_countdown == 0
-          fail!("JOB FOLLOW TIMED OUT (After #{job_timeout} seconds)")
+        fail!("JOB FOLLOW TIMED OUT (After #{job_timeout} seconds)")
       else
         puts "DDL validation with #{build_result} status."
         begin
-            log_response = perform_request(job_log_url, :get)
-            puts log_response.body.force_encoding('utf-8')
+          log_response = perform_request(job_log_url, :get)
+          puts log_response.body.force_encoding('utf-8')
         rescue
-            puts 'Couldn\'t retrieve log messages.'
+          puts 'Couldn\'t retrieve log messages.'
         end
         exit(1)
       end

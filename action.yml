@@ -17,7 +17,7 @@ inputs:
   jenkins_client_id:
     required: true
     description: 'Jenkins Client ID used with IAP'
-  job_sa_credentials:
+  jenkins_sa_credentials:
     required: true
     description: 'Jenkins service account credentials to use with IAP'
   gcr_account_key:
@@ -26,6 +26,7 @@ inputs:
   job_params:
     description: 'Jenkins build job parameters, encoded in JSON'
     required: false
+    default: ''
   job_timeout:
     description: 'Jenkins job timeout period. Default 30 seconds'
     required: false
@@ -39,7 +40,7 @@ outputs:
     description: 'URL to the job details'
     value: ${{ steps.jenkins_job.outputs.job_url }}
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - uses: docker/login-action@v2
       with:
@@ -63,20 +64,23 @@ runs:
         --audiences ${{ inputs.jenkins_client_id }} \
         --include-email \
         --impersonate-service-account jenkins-sa@toptal-ci.iam.gserviceaccount.com)
-        echo IAP_TOKEN=$token >> $GITHUB_OUTPUT
+        echo iap_token=$token >> $GITHUB_OUTPUT
 
     - name: Run Trigger Jenkins Job
       id: jenkins_job
       shell: bash
       run: |
+        echo dummy=1234 >> $GITHUB_OUTPUT
         job_url=$(docker run --rm \
         -e jenkins_url=${{ inputs.jenkins_url }} \
         -e jenkins_user=${{ inputs.jenkins_user }} \
         -e jenkins_token=${{ inputs.jenkins_token }} \
         -e job_name=${{ inputs.job_name }} \
-        -e job_params=${{ inputs.job_params }} \
+        -e job_params='${{ inputs.job_params }}' \
         -e job_timeout=${{ inputs.job_timeout }} \
-        -e iap_token=${{ steps.iap_token.outputs.IAP_TOKEN }} \
+        -e iap_token=${{ steps.iap_token.outputs.iap_token }} \
+        -e GITHUB_OUTPUT=/home/runner/outputs/${GITHUB_OUTPUT##*/} \
+        -v ${GITHUB_OUTPUT%/*}:/home/runner/outputs \
         us-central1-docker.pkg.dev/toptal-hub/containers/toptal-jenkins-job-trigger-action:latest)
         echo $job_url >> $GITHUB_OUTPUT
 
