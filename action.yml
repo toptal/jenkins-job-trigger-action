@@ -14,8 +14,14 @@ inputs:
   job_name:
     required: true
     description: 'Jenkins job to triggered and follow up'
-  iap_token:
-    description: 'Token to authenticate to Identity Aware Proxy (IAP)'
+  jenkins_client_id:
+    required: true
+    description: 'Jenkins Client ID used with IAP'
+  job_sa_credentials:
+    required: true
+    description: 'Jenkins service account credentials to use with IAP'
+  gcr_account_key:
+    description: 'Account key to connect to GAR'
     required: true
   job_params:
     description: 'Jenkins build job parameters, encoded in JSON'
@@ -24,9 +30,6 @@ inputs:
     description: 'Jenkins job timeout period. Default 30 seconds'
     required: false
     default: '30'
-  proxy:
-    required: false
-    description: 'Proxy url, which includes username and password'
   async:
     description: 'Set to true if you want to just trigger the job without waiting for it to finish'
     required: false
@@ -34,9 +37,48 @@ inputs:
 outputs:
   jenkins_job_url:
     description: 'URL to the job details'
+    value: ${{ steps.jenkins_job.outputs.job_url }}
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'composite'
+  steps:
+    - uses: docker/login-action@v2
+      with:
+        registry: us-central1-docker.pkg.dev
+        username: _json_key
+        password: ${{ inputs.gcr_account_key }}
+
+    - name: Auth with jenkins-sa
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ inputs.jenkins_sa_credentials }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Generate IAP auth token
+      shell: bash
+      id: iap_token
+      run: |
+        token=$(gcloud auth print-identity-token \
+        --audiences ${{ inputs.jenkins_client_id }} \
+        --include-email \
+        --impersonate-service-account jenkins-sa@toptal-ci.iam.gserviceaccount.com)
+        echo IAP_TOKEN=$token >> $GITHUB_OUTPUT
+
+    - name: Run Trigger Jenkins Job
+      id: jenkins_job
+      shell: bash
+      run: |
+        job_url=$(docker run --rm \
+        -e jenkins_url=${{ inputs.jenkins_url }} \
+        -e jenkins_user=${{ inputs.jenkins_user }} \
+        -e jenkins_token=${{ inputs.jenkins_token }} \
+        -e job_name=${{ inputs.job_name }} \
+        -e job_params=${{ inputs.job_params }} \
+        -e job_timeout=${{ inputs.job_timeout }} \
+        -e iap_token=${{ steps.iap_token.outputs.IAP_TOKEN }} \
+        us-central1-docker.pkg.dev/toptal-hub/containers/toptal-jenkins-job-trigger-action:latest)
+        echo $job_url >> $GITHUB_OUTPUT
 
 branding:
   icon: 'check-circle'
