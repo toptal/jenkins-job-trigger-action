@@ -21,6 +21,7 @@ module Jenkins
     end
 
     def call
+      puts "call"
       queue_item_location = queue_job(job_name, job_params)
       job_run_url = get_job_run_url(queue_item_location, job_timeout)
       output_file = ENV["GITHUB_OUTPUT"]
@@ -28,7 +29,7 @@ module Jenkins
         f << "jenkins_job_url=#{job_run_url}"
       end
       puts "Job run URL: #{job_run_url}"
-      
+
 
       if @async_mode
         puts "Stopping at the triggering step since the async option is enabled"
@@ -41,14 +42,17 @@ module Jenkins
     end
 
     def perform_request(url, method = :get, **args)
+      puts "  perform_request"
       payload = args.delete(:payload)
       response = RestClient::Request.execute method: method, url: url, payload: payload, user: jenkins_user, password: jenkins_token, proxy: proxy, args: args
       response_code = response.code
+      puts "    response.: #{response_code}"
       raise "Error on #{method} to #{url} [#{response_code}]" unless (200..299).include? response_code
       response
     end
 
     def queue_job(job_name, job_params)
+      puts "queue_job"
       trigger_method = job_params.empty? ? 'build' : 'buildWithParameters'
       job_params = job_params.map { |key, val| [key.to_sym, val] }.to_h
       job_queue_url = "#{jenkins_url}/job/#{job_name}/#{trigger_method}"
@@ -57,6 +61,7 @@ module Jenkins
     end
 
     def get_job_run_url(queue_item_location, job_timeout = DEFAULT_TIMEOUT)
+      puts "get_job_run_url"
       job_run_url = nil
       job_timeout = job_timeout.to_i if job_timeout.is_a? String
       timeout_countdown = job_timeout
@@ -88,6 +93,7 @@ module Jenkins
     end
 
     def job_progress(job_run_url, job_timeout = DEFAULT_TIMEOUT)
+      puts "job_progress"
       job_timeout = job_timeout.to_i if job_timeout.is_a? String
       job_progress_url = "#{job_run_url}api/json"
       job_log_url = "#{job_run_url}logText/progressiveText"
@@ -102,6 +108,8 @@ module Jenkins
         rescue
             # "NOOP"
         end
+        puts "      result: #{result}"
+        puts "      build_result: #{build_result}"
         if build_result.nil?
             timeout_countdown = timeout_countdown - sleep(INTERVAL_SECONDS)
         elsif build_result == 'ABORTED'
