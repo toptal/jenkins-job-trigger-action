@@ -4,7 +4,7 @@ require 'json'
 module Jenkins
   class JobClient
 
-    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :proxy, :job_name, :job_params, :job_timeout
+    attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :proxy, :job_name, :job_params, :job_timeout, :fetch_logs
 
     DEFAULT_TIMEOUT = 30
     INTERVAL_SECONDS = 10
@@ -18,6 +18,7 @@ module Jenkins
       @job_params = JSON.parse(args['INPUT_JOB_PARAMS'] || '{}')
       @job_timeout = args['INPUT_JOB_TIMEOUT'] || DEFAULT_TIMEOUT
       @async_mode = args['INPUT_ASYNC'].to_s == 'true'
+      @fetch_logs = args['INPUT_FETCH_LOGS'] || 'true'
     end
 
     def call
@@ -112,7 +113,7 @@ module Jenkins
           puts 'DDL validation with SUCCESS status!'
       elsif timeout_countdown == 0
           fail!("JOB FOLLOW TIMED OUT (After #{job_timeout} seconds)")
-      else
+      elsif @async_mode
         puts "DDL validation with #{build_result} status."
         begin
             log_response = perform_request(job_log_url, :get)
@@ -120,6 +121,9 @@ module Jenkins
         rescue
             puts 'Couldn\'t retrieve log messages.'
         end
+        exit(1)
+      else
+        puts 'DDL validation with FAILURE status!'
         exit(1)
       end
     end
